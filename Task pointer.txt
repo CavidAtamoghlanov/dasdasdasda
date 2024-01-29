@@ -1,0 +1,77 @@
+#include <iostream>
+using namespace std;
+
+class myShared_ptr {
+private:
+    int* _ptr;
+    int* count;
+
+public:
+ 
+    myShared_ptr() : _ptr(nullptr), count(new int(0)) {}
+
+    myShared_ptr(int* ptr) : _ptr(ptr), count(new int(1)) {}
+
+    myShared_ptr(const myShared_ptr& other) : _ptr(other._ptr), count(other.count) {
+        (*count)++;
+    }
+
+    myShared_ptr(myShared_ptr&& other) noexcept : _ptr(other._ptr), count(other.count) {
+        other._ptr = nullptr;
+        other.count = nullptr;
+    }
+
+    void reset(int* ptr) {
+        release();
+        _ptr = ptr;
+        count = new int(1);
+    }
+
+    void release() {
+        if (_ptr != nullptr && --(*count) == 0) {
+            delete _ptr;
+            delete count;
+        }
+        _ptr = nullptr;
+        count = nullptr;
+    }
+
+    int* get() const {
+        return _ptr;
+    }
+
+    friend ostream& operator<<(ostream& os, const myShared_ptr& sp) {
+        os << "Pointer deyer: " << sp._ptr << ", Count: " << *(sp.count);
+        return os;
+    }
+
+    int operator*() const {
+        return *_ptr;
+    }
+
+    operator bool() const {
+        return _ptr != nullptr;
+    }
+
+    
+    ~myShared_ptr() {
+        release();
+    }
+};
+
+int main() {
+    myShared_ptr ptr(new int(5));
+    cout << *ptr << endl; 
+    cout << ptr << endl;  
+
+    myShared_ptr ptr2 = ptr;
+    cout << ptr2 << endl; 
+
+    ptr.release();
+    cout << ptr2 << endl; 
+
+    ptr2.reset(new int(10));
+    cout << *ptr2 << endl;
+
+    
+}
